@@ -1,9 +1,6 @@
-Here is your content formatted as a polished `README.md` file for **ZoraSurge**:
-
-````markdown
 # ZoraSurge
 
-**ZoraSurge** is an AI-powered web application built for the **Wavehack Buildathon**, designed to enhance the creator and trader experience on **Zora's Coins Protocol**. Leveraging the Zora Coins SDK, it monitors **Base blockchain transactions** in real-time to detect surging coins, delivering instant browser and in-app notifications when coins experience significant market cap or volume increases (>10%).
+**ZoraSurge** is an AI-powered web application designed to enhance the creator and trader experience on **Zora's Coins Protocol**. Leveraging the Zora Coins SDK, it monitors **Base blockchain transactions** in real-time to detect surging coins, delivering instant browser and in-app notifications when coins experience significant market cap or volume increases (>10%).
 
 With a sleek, responsive interface built using **React**, **TypeScript**, **Tailwind CSS**, and **Framer Motion**, ZoraSurge empowers users to seize early investment opportunities, making trading on Zora more informed and engaging.
 
@@ -62,7 +59,7 @@ ZoraSurge boosts visibility and trading activity on the **Base chain**, showcasi
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/zorasurge.git
+git https://github.com/Thycrescendo/Zora-Surge
 cd zorasurge
 ````
 
@@ -215,26 +212,3 @@ We welcome contributions!
 This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.
 
 ---
-
-## 🙌 Acknowledgments
-
-* Built for the **Wavehack Buildathon** to advance Zora’s Coins Protocol
-* Powered by **Zora Coins SDK** and the **Base blockchain**
-* Inspired by the need to empower creators and traders with real-time insights
-
----
-
-## 📬 Contact
-
-For questions, issues, or feature requests:
-→ Reach out via [X (Twitter)](https://x.com)
-→ Or open an issue in the [GitHub repository](https://github.com/your-username/zorasurge)
-
----
-
-> 📝 **Note**: Replace `your-username` and `your-zora-api-key` with your actual GitHub username and API key.
-
-```
-
-Let me know if you want help creating a `LICENSE` file, `CONTRIBUTING.md`, project banner, or deploying to Vercel or Netlify!
-```
