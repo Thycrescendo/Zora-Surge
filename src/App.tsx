@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { setApiKey, getCoinsTopGainers, getCoinsTopVolume24h } from '@zoralabs/coins-sdk';
 import { motion, AnimatePresence } from 'framer-motion';
 import CoinCard from './components/CoinCard';
-import NotificationPopup from './components/NotificationPopup'; // Renamed import
+import NotificationPopup from './components/NotificationPopup';
+import TradeModal from './components/TradeModal';
+import Settings from './components/Settings';
+import DashboardToolbar from './components/DashboardToolbar';
 
 interface Coin {
   id?: string;
@@ -18,49 +21,38 @@ const App: React.FC = () => {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null);
+  const [settings, setSettings] = useState({ threshold: 10, selectedCoins: [] as string[] });
+  const [sortBy, setSortBy] = useState('marketCap');
 
   useEffect(() => {
-    // Set Zora API key (replace with your actual API key)
-    setApiKey('your-api-key-here');
+    setApiKey('your-zora-api-key');
 
-    // Request notification permission if supported
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (window.Notification.permission !== 'granted') {
         window.Notification.requestPermission();
       }
     }
 
-    // Fetch surging coins
     const fetchSurgingCoins = async () => {
       setIsLoading(true);
       try {
+        const coinsToFetch = settings.selectedCoins.length ? settings.selectedCoins : ['all'];
         const [topGainersResponse, topVolumeResponse] = await Promise.all([
           getCoinsTopGainers({ count: 10 }),
           getCoinsTopVolume24h({ count: 10 }),
         ]);
 
-        const topGainers = topGainersResponse.data?.exploreList?.edges?.map((edge: any) => edge.node) || [];
-        const topVolume = topVolumeResponse.data?.exploreList?.edges?.map((edge: any) => edge.node) || [];
+        const combinedCoins = [...topGainersResponse.data?.exploreList?.edges?.map((edge: any) => edge.node) || [], ...topVolumeResponse.data?.exploreList?.edges?.map((edge: any) => edge.node) || []].filter(
+          (coin) => coinsToFetch.includes('all') || coinsToFetch.includes(coin.address)
+        );
 
-        // Combine and deduplicate coins
-        const combinedCoins = [...topGainers, ...topVolume].reduce((acc, coin) => {
-          if (!acc.find((c: Coin) => c.address === coin.address)) {
-            acc.push(coin);
-          }
-          return acc;
-        }, [] as Coin[]);
-
-        // Check for surges (e.g., market cap change > 10%)
         combinedCoins.forEach((coin: Coin) => {
           const change = parseFloat(coin.marketCapDelta24h || '0');
-          if (change > 10 && coin.name && coin.symbol) {
+          if (change > settings.threshold && coin.name && coin.symbol) {
             const message = `${coin.name} (${coin.symbol}) surged by ${change.toFixed(2)}%!`;
             setNotifications((prev) => [...prev, message]);
-            if (
-              typeof window !== 'undefined' &&
-              'Notification' in window &&
-              window.Notification.permission === 'granted'
-            ) {
+            if (typeof window !== 'undefined' && 'Notification' in window && window.Notification.permission === 'granted') {
               new window.Notification(message, {
                 body: `Market Cap: ${coin.marketCap} | 24h Volume: ${coin.volume24h}`,
               });
@@ -68,7 +60,7 @@ const App: React.FC = () => {
           }
         });
 
-        setCoins(combinedCoins);
+        setCoins(combinedCoins.sort((a, b) => parseFloat(b[sortBy] || '0') - parseFloat(a[sortBy] || '0')));
       } catch (error) {
         console.error('Error fetching coins:', error);
       } finally {
@@ -77,10 +69,10 @@ const App: React.FC = () => {
     };
 
     fetchSurgingCoins();
-    const interval = setInterval(fetchSurgingCoins, 60000); // Refresh every 60 seconds
+    const interval = setInterval(fetchSurgingCoins, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [settings, sortBy]);
 
   return (
     <div className="min-h-screen bg-zora-primary p-4">
@@ -90,9 +82,13 @@ const App: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="text-center mb-8"
       >
-        <h1 className="text-4xl font-bold text-zora-accent">Zora-surge</h1>
+        <h1 className="text-4xl font-bold text-zora-accent">ZoraSurge</h1>
         <p className="text-lg text-gray-400">Real-time alerts for surging Zora coins</p>
+        <button onClick={() => setSelectedCoin(null)} className="mt-2 text-zora-accent">Settings</button>
       </motion.header>
+
+      <Settings setSettings={setSettings} />
+      <DashboardToolbar setSortBy={setSortBy} />
 
       <div className="max-w-4xl mx-auto">
         {isLoading ? (
@@ -105,7 +101,7 @@ const App: React.FC = () => {
             transition={{ staggerChildren: 0.2 }}
           >
             {coins.map((coin) => (
-              <CoinCard key={coin.address} coin={coin} />
+              <CoinCard key={coin.address} coin={coin} onTrade={() => setSelectedCoin(coin)} />
             ))}
           </motion.div>
         )}
@@ -119,6 +115,7 @@ const App: React.FC = () => {
             onClose={() => setNotifications((prev) => prev.filter((_, i) => i !== index))}
           />
         ))}
+        {selectedCoin && <TradeModal coin={selectedCoin} onClose={() => setSelectedCoin(null)} />}
       </AnimatePresence>
     </div>
   );
